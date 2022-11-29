@@ -26,10 +26,20 @@ class HomeController extends Controller {
     this.today = dayjs().format('YYYY-MM-DD');
   }
 
+  async awaitTime(time) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve();
+      }, time || 1000);
+    });
+  }
+
   // 生成海报
   async genHaibao() {
     let { url } = this.ctx.request.body;
-    url = url || ' http://localhost:7701/public/index.html';
+    url =
+      url ||
+      'http://localhost:5173/?mode=download#/report-pdf/200/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiaW5zaWdodCJdLCJleHAiOjE2Njk2MzQ5NTgsInVzZXJfbmFtZSI6IntcImVtYWlsXCI6XCI3OTI4NjU3MjZAcXEuY29tXCIsXCJlbXBDb2RlXCI6XCJ4dXlhbmdcIixcImZ1bGxuYW1lXCI6XCJ4dXlhbmdcIixcInBhc3N3b3JkXCI6XCIkMmEkMTAkUVVUYzdFcE9qc0d6YXNsV2RvQjRJLmdpTGU3MWhJUDR2U3d6QWVXWTNCbHd6bzBZdVFVLldcIn0iLCJqdGkiOiI5ZGVjMDMxMC1iYTA4LTQyYTAtYjdiZS05ZTI5YTQ4YTJjZGQiLCJjbGllbnRfaWQiOiJyZXNvdXJjZTEiLCJzY29wZSI6WyJpbnNpZ2h0Il19.OctNJfW9Gr7ILBBPGdeuBcyqlaKDPKqzh5O_yFbJAds';
     const id = nanoid();
     this._genHaibao(id, url);
     this.success({ data: id });
@@ -38,7 +48,7 @@ class HomeController extends Controller {
   // 获取海报
   async getHaibao() {
     const { id } = this.ctx.request.body;
-    if (!id) return this.failed({ err_msg: '海报不存在' });
+    if (!id) return this.failed({ err_msg: '参数不存在' });
     const pathfile = path.resolve(__dirname, `./../public/${id}.png`);
     const exists = await util.promisify(fs.exists)(pathfile);
     if (exists) {
@@ -48,18 +58,10 @@ class HomeController extends Controller {
     }
   }
 
-  async awaitTime(time) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve();
-      }, time || 1000);
-    });
-  }
-
   async _genHaibao(id, url) {
     if (!browser) {
       browser = await puppeteer.launch({
-        defaultViewport: { width: 750, height: 1334 },
+        defaultViewport: { width: 1680, height: 1680 },
         ignoreHTTPSErrors: true,
         headless: true,
         args: args,
@@ -78,34 +80,33 @@ class HomeController extends Controller {
     const page = await browser.newPage();
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle0',
     });
 
-    console.log('等待页面加载完成');
-
-    await this.awaitTime(2000);
-
-    console.log('保存截图');
+    console.debug('等待页面加载完成');
 
     const options = {
       //纸张尺寸
       format: 'A4', //打印背景,默认为false
-      printBackground: true, //不展示页眉
-      displayHeaderFooter: true, //页眉与页脚样式,可在此处展示页码等
+      landscape: true,
+      printBackground: true,
+      displayHeaderFooter: false, //页眉与页脚样式,可在此处展示页码等
       headerTemplate,
       footerTemplate,
       margin: {
-        top: '60px',
-        bottom: '60px',
-        left: '30px',
-        right: '30px',
+        top: '0px',
+        bottom: '0px',
+        left: '0px',
+        right: '0px',
       },
       path: path.resolve(__dirname, `./../public/${id}.pdf`),
     };
 
+    console.debug('保存截图');
+
     await page.pdf(options);
 
-    console.log('关闭页面');
+    console.debug('关闭页面');
     await page.close();
   }
 
@@ -121,24 +122,6 @@ class HomeController extends Controller {
     this.success({
       data: text.includes('我靠') ? '不合规' : res.data.conclusion,
     });
-  }
-
-  async genHaibaoDealer() {
-    var datas = [];
-    let max = 3;
-    for (let i = 0; i < datas.length; i++) {
-      let x = datas[i];
-      console.log(`${i}.-----${x.dealer}------${--max}`);
-      this._genHaibaoDealer(x.dealer, x.telephone, x.address, x.area, () => {
-        max++;
-      });
-      while (max <= 0) {
-        console.log('等待...');
-        await this.awaitTime(500);
-      }
-    }
-
-    this.success();
   }
 }
 

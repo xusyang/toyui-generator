@@ -12,4 +12,3 @@ yum install libXcomposite.x86_64 pango.x86_64 libXcursor.x86_64 libXdamage.x86_6
 npm install -S puppeteer //安装puppeteer时，总是提示安装不上，一种情况是跳过安装chrome，但是我个人不建议，因为后面会有版本问题，亲测麻烦的很。后面使用cnpm
 ```
 
-

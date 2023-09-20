@@ -37,9 +37,7 @@ class HomeController extends Controller {
   // 生成海报
   async genHaibao() {
     let { url } = this.ctx.request.body;
-    url =
-      url ||
-      'http://localhost:5173/?mode=download#/report-pdf/200/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiaW5zaWdodCJdLCJleHAiOjE2Njk2MzQ5NTgsInVzZXJfbmFtZSI6IntcImVtYWlsXCI6XCI3OTI4NjU3MjZAcXEuY29tXCIsXCJlbXBDb2RlXCI6XCJ4dXlhbmdcIixcImZ1bGxuYW1lXCI6XCJ4dXlhbmdcIixcInBhc3N3b3JkXCI6XCIkMmEkMTAkUVVUYzdFcE9qc0d6YXNsV2RvQjRJLmdpTGU3MWhJUDR2U3d6QWVXWTNCbHd6bzBZdVFVLldcIn0iLCJqdGkiOiI5ZGVjMDMxMC1iYTA4LTQyYTAtYjdiZS05ZTI5YTQ4YTJjZGQiLCJjbGllbnRfaWQiOiJyZXNvdXJjZTEiLCJzY29wZSI6WyJpbnNpZ2h0Il19.OctNJfW9Gr7ILBBPGdeuBcyqlaKDPKqzh5O_yFbJAds';
+    url = url || 'https://pscdev.deloitte.com.cn/dhr/dev/generate/public/index.html';
     const id = nanoid();
     this._genHaibao(id, url);
     this.success({ data: id });
@@ -49,8 +47,10 @@ class HomeController extends Controller {
   async getHaibao() {
     const { id } = this.ctx.request.body;
     if (!id) return this.failed({ err_msg: '参数不存在' });
-    const pathfile = path.resolve(__dirname, `./../public/${id}.png`);
+    const pathfile = path.resolve(__dirname, `./../public/${id}.pdf`);
+    console.log('pathfile', pathfile);
     const exists = await util.promisify(fs.exists)(pathfile);
+    console.log('exists', exists);
     if (exists) {
       this.success({ data: id });
     } else {
